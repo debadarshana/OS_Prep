@@ -1,9 +1,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 int isDigit(char c)
 {
     return (c >= '0' && c <= '9');
+}
+static int hexval(char c) {
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    else if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    else if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+
+    return 0;
 }
 int atoi(char* str)
 {
@@ -13,56 +24,68 @@ int atoi(char* str)
     //skip leding space
     while((*str) == ' ')
         str++;
-    //check sign
-    char isNeg = 0;
-    if((*str) == '-')
-    {
-        isNeg = 1;
-        str++;
-    }
-    else if((*str) == '+')
-    {
-        str++;
-    }
-     // Check if the string contains valid digits
-     if (!isDigit(*str)) {
-        return -1; // Invalid input
-    }
+    
     int num = 0;
-    while(*str && (isDigit(*str)))
+            //check sign
+    char isNeg = 0;
+    /* if hex val*/
+    if( (str[0] == '0') && ((str[1] == 'x')||(str[1] == 'X')))
     {
-        int digit = *str - '0';
-           // Overflow check
-           /*
-           ou're building the integer like this:
+        str += 2;
+        while( (*str) && (isxdigit(*str)))
+        {
+            num = num * 16 + hexval((*str)++);
+        } 
 
-c
-Copy
-Edit
-num = num * 10 + digit;
-This is fine as long as the result doesn't go beyond INT_MAX (which is 2147483647 for 32-bit signed int). But if num is too big, the next multiplication or addition will overflow silently in C — leading to garbage or undefined behavior.
-
-✅ So what does this condition do?
-c
-Copy
-Edit
-(num > (INT_MAX - digit) / 10)
-It asks:
-
-“Is num * 10 + digit going to be bigger than INT_MAX?”
-
-Since doing num * 10 + digit directly could overflow, we rearrange it algebraically into a safe form.*/
-        if (num > (__INT_MAX__ - digit) / 10) 
-            return -1;
-        num = num * 10 + digit;
-        str++;
     }
-    while(*str)
+    else
     {
-        if((*str) != ' ')
-            return -1;
-        str++;
+
+        if((*str) == '-')
+        {
+            isNeg = 1;
+            str++;
+        }
+        else if((*str) == '+')
+        {
+            str++;
+        }
+        // Check if the string contains valid digits
+        if (!isDigit(*str)) {
+            return -1; // Invalid input
+        }
+    
+        while(*str && (isDigit(*str)))
+        {
+            int digit = *str - '0';
+            // Overflow check
+            /*
+            num = num * 10 + digit;
+            This is fine as long as the result doesn't go beyond INT_MAX (which is 2147483647 for 32-bit signed int). 
+            But if num is too big, the next multiplication or addition will overflow silently in C — leading to garbage or undefined behavior.
+
+        ✅ So what does this condition do?
+
+         (num > (INT_MAX - digit) / 10)
+            It asks:
+
+            “Is num * 10 + digit going to be bigger than INT_MAX?”
+
+             Since doing num * 10 + digit directly could overflow, we rearrange it algebraically into a safe form.*/
+            if (num > (__INT_MAX__ - digit) / 10) 
+                return -1;
+            num = num * 10 + digit;
+            str++;
+        }
+        while(*str)
+        {
+            if((*str) != ' ')
+                return -1;
+            str++;
+        }
+
     }
+    
     return isNeg ? -num : num;
 
    
